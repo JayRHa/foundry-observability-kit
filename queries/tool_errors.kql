@@ -1,0 +1,9 @@
+// Failing tool calls with their arguments, last 24h.
+dependencies
+| where timestamp > ago(24h)
+| where name startswith "execute_tool"
+| where success == false
+| extend tool = tostring(customDimensions["gen_ai.tool.name"]),
+         args = tostring(customDimensions["tool.call.arguments"])
+| project timestamp, tool, args, resultCode, duration, operation_Id
+| order by timestamp desc

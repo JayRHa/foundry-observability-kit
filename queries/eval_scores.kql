@@ -1,0 +1,10 @@
+// Continuous evaluation score trend per evaluator, last 7 days.
+// Alert-ready: schedule on the daily average dropping below your threshold.
+traces
+| where timestamp > ago(7d)
+| where message == "gen_ai.evaluation.result" or isnotempty(customDimensions["gen_ai.evaluation.name"])
+| extend evaluator = tostring(customDimensions["gen_ai.evaluation.name"]),
+         score = todouble(customDimensions["gen_ai.evaluation.score"])
+| where isnotempty(evaluator)
+| summarize avgScore = avg(score), evaluations = count() by evaluator, bin(timestamp, 1d)
+| order by timestamp desc, evaluator

@@ -1,0 +1,11 @@
+// Where do agent runs spend their time? Model calls vs tool calls, last 24h.
+// Table: dependencies (OpenTelemetry spans exported by Foundry / azure-ai-projects)
+dependencies
+| where timestamp > ago(24h)
+| where name startswith "invoke_agent" or name startswith "chat" or name startswith "execute_tool"
+| extend spanKind = case(
+    name startswith "execute_tool", "tool",
+    name startswith "chat", "model",
+    "agent_run")
+| summarize count(), avg(duration), percentile(duration, 95) by spanKind, name
+| order by percentile_duration_95 desc

@@ -1,0 +1,14 @@
+// P95 latency outliers with full span context for drill-down.
+let p95 = toscalar(
+    dependencies
+    | where timestamp > ago(24h) and name startswith "invoke_agent"
+    | summarize percentile(duration, 95));
+dependencies
+| where timestamp > ago(24h) and name startswith "invoke_agent"
+| where duration > p95
+| project timestamp, name, duration, operation_Id
+| join kind=inner (
+    dependencies
+    | project operation_Id, spanName = name, spanDuration = duration
+  ) on operation_Id
+| order by duration desc, spanDuration desc

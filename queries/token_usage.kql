@@ -1,0 +1,10 @@
+// Token consumption per agent and day - the cost trend line.
+dependencies
+| where timestamp > ago(7d)
+| extend agent = tostring(customDimensions["gen_ai.agent.name"]),
+         inputTokens = tolong(customDimensions["gen_ai.usage.input_tokens"]),
+         outputTokens = tolong(customDimensions["gen_ai.usage.output_tokens"])
+| where isnotempty(agent)
+| summarize inputTokens = sum(inputTokens), outputTokens = sum(outputTokens),
+            runs = dcount(operation_Id) by agent, bin(timestamp, 1d)
+| order by timestamp desc, agent
